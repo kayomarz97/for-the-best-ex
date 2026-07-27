@@ -74,7 +74,15 @@ landscape"), navigate (figurative), crucial, pivotal, multifaceted, meticulous, 
 paramount, transformative, elevate, embark, harness, foster, leverage, utilize, facilitate,
 empower, streamline, robust, seamless, nuanced (as a compliment), vibrant, myriad, plethora,
 testament, cornerstone, cutting-edge, paradigm shift, game changer, ever-evolving,
-supercharge, unlock, unleash, showcase, underscore, garner, boast (of a product), encompass.
+supercharge, unlock, unleash, showcase, underscore, garner, boast (of a product), encompass,
+commendable, groundbreaking, advancements, aligns (figurative), bolster, nestled, surpasses
+(of a product), interplay, enduring.
+
+The core of this list is not taste. Corpus studies of over 15 million PubMed abstracts and
+of ML peer reviews measured these exact words at 10 to 35 times their expected frequency in
+model-touched text: "delves" at 28 times baseline, "meticulous" at 34.7, "underscores" at
+13.8, "showcasing" at 10.7, "commendable" at 9.8. Citations in
+`references/how-detection-works.md`.
 
 Banned discourse markers: furthermore, moreover, additionally, notably, importantly,
 "in conclusion" as an opener, "to conclude", "in summary", "that said" used as filler,
@@ -103,9 +111,11 @@ just X, it's Y." State Y and stop. "The question isn't the model, it's the eval"
 in current machine prose. Hunt it specifically.
 
 **The tricolon.** Three parallel items of matching length and matching grammar, especially
-three adjectives or three clauses. "It is faster, cheaper, and more reliable." Real people
-list two things, or four, or three of visibly unequal weight. Break it: cut one, expand
-one, or make the third a different shape entirely.
+three adjectives or three clauses. "It is faster, cheaper, and more reliable." Model text
+runs this construction at nearly double the human expert rate, 7.13 per document against
+3.73 in one 2025 corpus study, the strongest rhetorical differentiator that study found.
+Real people list two things, or four, or three of visibly unequal weight. Break it: cut
+one, expand one, or make the third a different shape entirely.
 
 **Balanced antithesis.** Symmetric structures where both halves have the same weight and
 rhythm, so the sentence sounds wise and says little. If both halves are equally polished,
@@ -156,10 +166,12 @@ stop, or by restructuring the sentence. Prefer restructuring: two em dashes in a
 usually mean the sentence wants to be two sentences. This rule is absolute here and stricter
 than most style guides, which is the point.
 
-Be honest with the writer about why. The em dash is not proof of anything, and plenty of
-excellent human writers lean on it. It became a folk signal, so readers now react to it
-whether or not the reaction is fair. This rule removes a fight you gain nothing from
-winning.
+Be honest with the writer about why. The overuse is real: em dash prevalence in biomedical
+preprints nearly tripled after ChatGPT and the habit survives even when a model is told to
+write plain prose. But no study shows dash-deletion alone changing a detector verdict, and
+plenty of excellent human writers have leaned on the em dash since long before any of this.
+The rule exists because readers now pattern-match on it, fairly or not, and it removes a
+fight you gain nothing from winning.
 
 **Straight quotes and apostrophes,** not curly, unless the destination converts them itself.
 Mixed curly and straight in one document is a copy-paste fingerprint.

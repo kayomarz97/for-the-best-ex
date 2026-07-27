@@ -3,11 +3,9 @@
 This exists so the rules in `SKILL.md` trace to something other than vibes. Every rule
 should either come from a signal described here or from the writer's own stated preference.
 
-A caveat up front, because the rest of this file is about honesty: the research pass behind
-this document was cut short. The papers cited are ones I am confident exist and have
-represented accurately, but the numbers have not been re-verified line by line against the
-PDFs. Spot-check anything you plan to repeat in public. Corrections by pull request are
-welcome.
+The claims below were checked against primary sources (arXiv, journal pages, official
+university and vendor statements) in July 2026. Where a number could not be verified
+against a primary source, that is said in place. Corrections by pull request are welcome.
 
 ## The two families
 
@@ -18,112 +16,183 @@ Human text wanders.
 
 The signal has two parts that get conflated. **Perplexity** is average surprise: machine
 text is lower. **Burstiness** is the variance of that surprise across the piece: humans
-spike, models stay level. Burstiness is the harder one to fake and it is why the uneven
-rhythm rule in layer two is not cosmetic.
+spike, models stay level. Honest caveat: burstiness is a real concept and every vendor
+invokes it, but no rigorous published study reporting a clean effect size for
+sentence-length variance in human versus model text turned up in our search. The strongest
+statements of it are vendor material, GPTZero's in particular. Treat the mechanism as
+plausible and the numbers as unestablished.
 
 Notable methods:
 
-- **GLTR** (Gehrmann et al., ACL 2019) visualises per-token rank. Green means the token was
-  in the model's top 10 predictions. Machine text is a wall of green.
-- **DetectGPT** (Mitchell et al., ICML 2023, arXiv:2301.11305) uses probability curvature.
-  Perturb the text slightly and re-score. Machine text sits on a local maximum of the log
-  probability surface, so perturbation reliably lowers the score. Human text does not
-  behave that way.
-- **Fast-DetectGPT** (Bao et al., ICLR 2024, arXiv:2310.05130) gets the same signal from
-  conditional probability curvature at a fraction of the compute.
-- **Binoculars** (Hans et al., ICML 2024, arXiv:2401.12070) scores the ratio of perplexity
-  under one model to cross-perplexity under a second. The trick is that it normalises away
-  "this prompt was simply predictable", which is what made naive perplexity fail on
-  formulaic human writing.
+- **GLTR** (Gehrmann et al., ACL 2019) colours each token by its rank in the model's
+  predictions: green for top-10, through violet for beyond top-1000. Machine text is a wall
+  of green. With the overlay, human annotators' accuracy at spotting fake text rose from
+  54% to 72% with no training.
+- **DetectGPT** (Mitchell et al., ICML 2023) uses probability curvature. Machine text sits
+  at a local maximum of the log-probability surface, so small perturbations reliably lower
+  its score while human text shows no such pattern. Reported 0.95 AUROC on detecting
+  GPT-NeoX fake news, against 0.81 for the best prior zero-shot baseline.
+- **Fast-DetectGPT** (Bao et al., ICLR 2024) replaces the expensive perturbation step with
+  conditional probability curvature: about 340 times faster, and roughly 75% relative
+  accuracy improvement over DetectGPT.
+- **Binoculars** (Hans et al., ICML 2024) scores the ratio of one model's perplexity to a
+  second model's cross-perplexity on the same text. This normalises away "the prompt was
+  simply predictable", which is what sank naive perplexity on formulaic human writing.
+  Reported over 90% detection of ChatGPT text at a 0.01% false-positive rate, without
+  training on ChatGPT output.
 
-**Trained classifiers.** A RoBERTa or DeBERTa-class model fine-tuned on human/machine pairs.
-This is what most commercial products are, including GPTZero, Originality.ai, Copyleaks,
-Winston, and Turnitin's detector. They learn whatever separates the two corpora, which
-includes genuine distributional signal and also a great deal of surface style: discourse
-markers, list formatting, vocabulary, sentence uniformity. That second part is why layer one
-matters and also why these tools generalise badly to text outside their training
+**Trained classifiers.** A RoBERTa or DeBERTa-class model fine-tuned on human/machine
+pairs. This is what most commercial products are: GPTZero, Originality.ai, Copyleaks,
+Winston, Turnitin's detector, Pangram. They learn whatever separates the two corpora,
+which includes genuine distributional signal and a great deal of surface style: discourse
+markers, list formatting, vocabulary, sentence uniformity. That is why layer one of the
+skill matters, and also why these tools generalise badly outside their training
 distribution.
+
+On current commercial performance, the honest picture is asymmetric. Independent testing
+has repeatedly embarrassed self-reported vendor numbers (see the false-positive section),
+with one exception worth knowing about: Pangram. A University of Chicago Booth working
+paper (Jabarian and Imas, 2025, NBER w34223) found its error rates near zero on medium and
+long text, holding under a strict 0.5% false-positive cap, while an open-source RoBERTa
+baseline mislabelled 30% to 69% of human text. A Vrije Universiteit Brussel test in June
+2026 found it caught 97.5% of fully AI-written papers and 95% of deliberately "humanized"
+ones, where other tools failed. The era in which surface tricks beat serious classifiers
+is closing, which is an argument for substance over tricks, not against care.
 
 ## Watermarking
 
-A different approach: mark the text at generation time instead of guessing after the fact.
-Kirchenbauer et al. (ICML 2023, arXiv:2301.10226) partition the vocabulary into a green list
-and a red list seeded by the preceding token, then bias sampling toward green. Detection is a
-statistical test on green-token frequency, and it needs no access to the model.
+A different approach: mark the text at generation time instead of guessing afterwards.
+Kirchenbauer et al. (ICML 2023) partition the vocabulary at each step into a "green list"
+and "red list" seeded by prior context, then bias sampling toward green. Detection is a
+statistical test on green-token frequency, needing no model access.
 
 Google DeepMind's **SynthID-Text** (Dathathri et al., *Nature*, 2024) uses tournament
-sampling and has been deployed on Gemini output at production scale, which is the only
-large deployment I am aware of. OpenAI has described a text watermarking method but has not
-shipped it broadly.
+sampling, has been deployed on Gemini output since 2024, was open-sourced in October 2024,
+and got a unified public detector in May 2025 with a global rollout alongside Gemini 3 in
+November 2025. Regulation is catching up: EU AI Act Article 50 becomes applicable on
+2 August 2026 and requires providers of generative systems to mark synthetic content in a
+machine-readable, detectable form.
 
-Two things follow. Watermarking only covers text from participating models, so it says
-nothing about the rest. And paraphrasing degrades it, which is the same weakness every other
-method has.
+Two things follow. Watermarking covers only participating models. And paraphrasing
+degrades it, the same weakness everything else has.
 
 ## Everything breaks on paraphrase
 
-Krishna et al. (NeurIPS 2023, arXiv:2303.13408) built DIPPER, a paraphraser designed to
-evade detection, and cut detector performance sharply across statistical methods,
-classifiers, and watermarks alike. Their proposed defence is retrieval against a database of
-model outputs rather than better classification, which tells you how much confidence they had
-in classification.
+Krishna et al. (NeurIPS 2023) built DIPPER, an 11-billion-parameter paraphraser, and ran it
+against the field. At a fixed 1% false-positive rate, DetectGPT's detection accuracy fell
+from 70.3% to 4.6%. Watermarking, GPTZero, and OpenAI's classifier were also evaded. Their
+proposed defence was not a better classifier but retrieval: search a database of the
+provider's own past generations, which recovered 80% to 97% detection against a corpus of
+15 million generations. When the authors of a detection paper propose "keep a copy of
+everything the model ever said" as the fix, you have learned something about classifiers.
 
-Sadasivan et al. (arXiv:2303.11156) argue the harder version: as models get closer to the
-human text distribution, the achievable gap between true positive and false positive rates
-shrinks toward nothing. Any detector good enough to catch a sufficiently good model will
-also flag humans at a comparable rate.
+Sadasivan et al. (2023) proved the harder version. For the best possible detector, AUROC is
+bounded by 1/2 + TV − TV²/2, where TV is the total variation distance between the human and
+machine text distributions. As models approach the human distribution, TV shrinks and the
+bound collapses toward coin-flipping. Any detector good enough to catch a sufficiently good
+model must also flag humans at a comparable rate.
+
+The RAID benchmark (Dugan et al., ACL 2024; over 6 million generations, 11 models, 11
+adversarial attacks, 8 domains) added the empirical version: detectors advertising 99%+
+accuracy were broken not just by attacks but by mundane distribution shift, a different
+sampling temperature, a repetition penalty, an unseen generator. Paraphrasing did not even
+help uniformly: one RoBERTa detector got 16 points *more* accurate on paraphrased text,
+because the paraphraser dragged the text toward its training distribution.
 
 ## The false-positive problem
 
 This is the part that matters most and gets the least attention.
 
-Liang et al. (*Patterns*, 2023, arXiv:2304.02819) ran GPT detectors on TOEFL essays written
-by non-native English speakers and found they were misclassified as AI at strikingly high
-rates, while essays by native speakers were not. The mechanism is unkind and obvious:
-detectors key on low perplexity and limited lexical variety, and that describes second
-language writing as well as it describes model output.
+Liang et al. (*Patterns*, 2023) ran seven GPT detectors on 91 TOEFL essays by non-native
+English speakers. The average false-positive rate across detectors was 61.3%. At least one
+detector flagged 97.8% of the essays. All seven unanimously flagged 19.8%. The matched
+native-speaker control essays were classified accurately. The mechanism is unkind and
+obvious: detectors key on low perplexity and limited lexical range, which describes second
+language writing as well as it describes model output. When the same essays had their
+vocabulary enriched by ChatGPT, the false-positive rate fell to 11.6%: the detector
+preferred AI-touched text to honest human writing.
 
-Weber-Wulff et al. (*International Journal for Educational Integrity*, 2023) tested fourteen
-tools and concluded none were accurate or reliable enough for the use they were being sold
-for, with performance falling further on lightly edited text.
+Weber-Wulff et al. (*International Journal for Educational Integrity*, 2023) tested
+fourteen tools. All scored below 80% accuracy; only five cleared 70%. Accuracy on
+unmodified ChatGPT text averaged about 74% and fell to about 42% after light manual editing
+or a pass through Quillbot. Mixed human-and-model text is the worst case: a 2025 study
+("Almost AI, Almost Human") found text with even 1% AI-polished content was flagged as AI
+about 27% of the time, while a 2026 Sultan Qaboos University study measured roughly 0%
+accuracy on genuinely hybrid text.
 
-The institutional response followed. Vanderbilt disabled Turnitin's AI detector in 2023 and
-published its reasoning. OpenAI withdrew its own AI Text Classifier in July 2023, citing low
-accuracy. The RAID benchmark (Dugan et al., ACL 2024, arXiv:2405.07940) found that detectors
-which look strong in their own papers degrade badly under decoding changes, adversarial
-edits, and unseen domains.
+The institutional response followed. Vanderbilt disabled Turnitin's AI detector on
+16 August 2023, noting that Turnitin's own claimed 1% false-positive rate would mean about
+750 falsely accused papers a year on their volume. Michigan State, Northwestern, UT
+Austin, and Penn State moved similarly in 2023; the University of Waterloo formally
+discontinued the tool in September 2025 after internal tests flagged human work as "100%
+AI"; Curtin followed in January 2026. OpenAI withdrew its own AI Text Classifier in July
+2023: it caught 26% of AI text at its chosen threshold. And in February 2026 a New York
+court in *Newby v. Adelphi University* found an AI-plagiarism accusation "without valid
+basis and devoid of reason" and ordered the student's record expunged.
 
 So "will this pass a detector" is the wrong question. The tools are unreliable in both
 directions, the thresholds move, and a piece that passes one fails another.
 
 ## The stylometric layer
 
-Separate from perplexity, there is measurable vocabulary drift in text that models touched.
+Separate from perplexity, there is measured vocabulary drift in text that models touched.
 
-Liang et al. (ICML 2024, arXiv:2403.07183) estimated the share of AI-modified sentences in
-ML conference peer reviews by tracking adjective frequency shifts, finding a meaningful
-fraction and a sharp rise in a specific set of words. Kobak et al. (*Science Advances*, 2025)
-did the equivalent for PubMed abstracts using an excess-vocabulary method borrowed from
-excess-mortality analysis, comparing observed word frequencies against a pre-2022 baseline.
-The words that spiked were overwhelmingly style verbs and adjectives rather than content
-words: *delve*, *underscore*, *showcase*, *intricate*, *pivotal*, *crucial*, *comprehensive*.
+Kobak et al. (*Science Advances*, 2025) analysed over 15 million PubMed abstracts against
+pre-2022 frequency trends, borrowing the excess-mortality method from epidemiology. At
+least 13.5% of 2024 abstracts showed lexical signs of LLM assistance, reaching about 40%
+in some subcorpora. The excess words were overwhelmingly style words, not content words:
+*delves* at 28 times its expected frequency, *underscores* at 13.8, *showcasing* at 10.7,
+with *intricate*, *meticulously*, *realm*, *pivotal*, *garnered*, *aligns*, and *notably*
+close behind. They catalogue 379 excess words for 2024 alone; the full list is on GitHub
+(berenslab/llm-excess-vocab).
 
-That is where the banned list in `SKILL.md` comes from. Note the implication: the list is a
-snapshot of a moving distribution. As these words get flagged, models and writers drift
-elsewhere, and the list needs rewriting. Judge by frequency in what you read this year, not
-by the list.
+Liang et al. (ICML 2024) did the equivalent for peer review: an estimated 6.5% to 16.9% of
+review sentences at major ML venues were substantially AI-modified, 10.6% at ICLR 2024
+against a 1.6% pre-ChatGPT baseline. The tell-tale adjectives: *meticulous* up 34.7-fold,
+*intricate* 11.2-fold, *commendable* 9.8-fold.
+
+Juzek and Ward (COLING 2025, "Why Does ChatGPT 'Delve' So Much?") intersected the PubMed
+spikes with GPT-3.5's own output and isolated 21 focal words, *delves* running at 6,697%
+of its 2020 baseline in model output. Their favoured explanation for why is worth knowing:
+RLHF raters under time pressure appear to reward "sophisticated-sounding" vocabulary, and
+the reward model over-learns it. The fingerprint is not an accident of training data. It
+is what human raters accidentally asked for.
+
+Two structural findings round this out. A 2025 study of LLM rhetoric measured tricolons,
+the three-parallel-items construction, at 7.13 per document in model text against 3.73 in
+expert human text, the strongest single rhetorical differentiator they found. And the em
+dash, which folk wisdom convicted without trial, now has actual evidence: a study of
+69,632 medRxiv discussion sections found em dash prevalence rose from 4.23% of preprints
+pre-ChatGPT to 11.58% after, hitting 20.3% in 2025, with a placebo test showing no
+pre-LLM drift. OpenAI publicly acknowledged the behaviour when Altman announced in
+November 2025 that ChatGPT would finally obey custom instructions to stop. One arXiv study
+("The Last Fingerprint") found that when models are explicitly told to write plain prose,
+headers and bullets nearly vanish but the em dash habit survives, making it the stickiest
+formatting tell. None of which convicts any individual writer: em dash defenders are
+right that Dickinson got there first. See `what-does-not-work.md` for why the rule in this
+skill is about reader perception, not classifier evasion.
+
+Wikipedia's community-curated catalogue, "Signs of AI writing" (WP:AISIGNS), is the best
+maintained descriptive list of these tells and is worth reading in full. It is
+observational, not statistical, and its editors note that some signs have already aged
+out, which is the right way to hold all of this: the fingerprint drifts, and any fixed
+word list is a snapshot.
 
 ## What this justifies
 
-- Cutting the excess-vocabulary words: direct, from the corpus studies.
-- Varying sentence length: burstiness is a real, measured, hard-to-fake signal.
-- Adding concrete named entities, numbers, and dates: they raise perplexity honestly and
-  they are the thing models cannot supply, since they were not there.
-- First person with stake, and admitted uncertainty: these are content-level absences in
-  model output, not style choices.
+- Cutting the excess-vocabulary words: direct, from three independent corpus studies.
+- Varying sentence length: the mechanism is real even where effect sizes are unpublished;
+  uniform rhythm is also just worse writing.
+- Adding concrete named entities, numbers, and dates: honest disclosure, no study directly
+  measures this as an evasion lever. It plausibly raises perplexity for the correct
+  reason, the model did not know your facts, but the case for it is that specific writing
+  is better writing.
+- First person with stake, and admitted uncertainty: content-level absences in model
+  output, catalogued observationally (WP:AISIGNS) rather than quantified.
 - Format profiles: markdown structure in a forum reply is one of the loudest surface
-  signals, and it is trivially avoidable.
-- Refusing to promise undetectability: see the whole false-positive section.
+  signals, and models drop it almost entirely when told, so nothing is lost.
+- Refusing to promise undetectability: see the entire false-positive section, the
+  Sadasivan bound, and Pangram's performance against "humanized" text.
 
 ## Sources
 
@@ -133,10 +202,24 @@ by the list.
 - Hans et al. Binoculars. ICML 2024. https://arxiv.org/abs/2401.12070
 - Kirchenbauer et al. A Watermark for Large Language Models. ICML 2023. https://arxiv.org/abs/2301.10226
 - Dathathri et al. SynthID-Text. Nature, 2024. https://www.nature.com/articles/s41586-024-08025-4
-- Krishna et al. Paraphrasing evades detectors. NeurIPS 2023. https://arxiv.org/abs/2303.13408
+- EU AI Act, Article 50. https://artificialintelligenceact.eu/article/50/
+- Krishna et al. Paraphrasing evades detectors; retrieval defence. NeurIPS 2023. https://arxiv.org/abs/2303.13408
 - Sadasivan et al. Can AI-Generated Text be Reliably Detected? https://arxiv.org/abs/2303.11156
-- Liang et al. GPT detectors are biased against non-native English writers. Patterns, 2023. https://arxiv.org/abs/2304.02819
-- Liang et al. Monitoring AI-Modified Content at Scale. ICML 2024. https://arxiv.org/abs/2403.07183
-- Kobak et al. Excess vocabulary in biomedical publications. Science Advances, 2025. https://arxiv.org/abs/2406.07016
-- Weber-Wulff et al. Testing of detection tools for AI-generated text. IJEI, 2023. https://edintegrity.biomedcentral.com/articles/10.1007/s40979-023-00146-z
 - Dugan et al. RAID benchmark. ACL 2024. https://arxiv.org/abs/2405.07940
+- Liang et al. GPT detectors are biased against non-native English writers. Patterns, 2023. https://arxiv.org/abs/2304.02819
+- Weber-Wulff et al. Testing of detection tools for AI-generated text. IJEI, 2023. https://edintegrity.biomedcentral.com/articles/10.1007/s40979-023-00146-z
+- Vanderbilt University, guidance on disabling Turnitin's AI detector, 16 Aug 2023. https://www.vanderbilt.edu/brightspace/2023/08/16/guidance-on-ai-detection-and-why-were-disabling-turnitins-ai-detector/
+- University of Waterloo, discontinuing Turnitin AI detection, Sept 2025. https://uwaterloo.ca/associate-vice-president-academic/news/waterloo-discontinuing-use-ai-detection-tool-turnitincom
+- OpenAI AI Text Classifier withdrawal, July 2023. https://openai.com/index/new-ai-classifier-for-indicating-ai-written-text/
+- Matter of Newby v. Adelphi University, NY, 2026. https://law.justia.com/cases/new-york/other-courts/2026/2026-ny-slip-op-26021.html
+- Kobak et al. Excess vocabulary in biomedical publications. Science Advances, 2025. https://www.science.org/doi/10.1126/sciadv.adt3813 and https://github.com/berenslab/llm-excess-vocab
+- Liang et al. Monitoring AI-Modified Content at Scale. ICML 2024. https://arxiv.org/abs/2403.07183
+- Juzek, Ward. Why Does ChatGPT "Delve" So Much? COLING 2025. https://aclanthology.org/2025.coling-main.426/
+- Em-ergence of the em-dash (medRxiv corpus study). https://arxiv.org/abs/2606.29540
+- The Last Fingerprint: How Markdown Training Shapes LLM Prose. https://arxiv.org/html/2603.27006v1
+- TechCrunch, OpenAI fixes ChatGPT's em dash problem, 14 Nov 2025. https://www.techcrunch.com/2025/11/14/openai-says-its-fixed-chatgpts-em-dash-problem/
+- How Persuasive Could LLMs Be? (tricolon frequencies). https://arxiv.org/html/2508.09614v1
+- Almost AI, Almost Human (AI-polished text false positives). https://arxiv.org/pdf/2502.15666
+- Jabarian, Imas. Artificial Writing and Automated Detection. Chicago Booth / NBER w34223, 2025. https://bfi.uchicago.edu/insights/artificial-writing-and-automated-detection/
+- Pangram third-party evaluations. https://www.pangram.com/blog/third-party-pangram-evals
+- Wikipedia: Signs of AI writing. https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing

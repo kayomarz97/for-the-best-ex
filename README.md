@@ -119,9 +119,14 @@ whatever first person the venue permits, and the skill will tell you if yours pe
 It does not claim to make anything undetectable, and you should distrust anything that does.
 Detectors are unreliable in both directions: they miss machine text routinely, and they flag
 genuine human writing at rates that have gotten real students in real trouble, with
-non-native English writers hit hardest. Vanderbilt disabled Turnitin's AI detector over it.
-OpenAI withdrew its own classifier for low accuracy. There is no ruleset that confers
-undetectability, because there is no stable target to be undetectable against.
+non-native English writers hit hardest. Seven detectors run on TOEFL essays by non-native
+speakers falsely flagged 61% of them on average, and at least one detector flagged nearly
+98%. Vanderbilt disabled Turnitin's AI detector over the false-positive arithmetic, Waterloo
+followed in 2025, OpenAI withdrew its own classifier after it caught 26% of AI text, and in
+2026 a New York court threw out a university's AI-plagiarism finding as "without valid basis
+and devoid of reason." There is no ruleset that confers undetectability, because there is no
+stable target to be undetectable against. The numbers and citations are in
+[references/how-detection-works.md](references/how-detection-works.md).
 
 What is actually on offer is better than that. Writing that is specific, opinionated, and
 grounded in things only you know is writing where the question stops being interesting. It
