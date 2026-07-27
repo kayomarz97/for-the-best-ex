@@ -1,41 +1,43 @@
 {
-  "name": "no-ai-slop",
-  "version": "1.0.4",
-  "description": "Remove 20+ patterns of AI slop from any piece of writing without flattening your personal voice.",
+  "name": "for-the-best-ex",
+  "version": "2.0.0",
+  "description": "Cut the patterns that make writing read as machine-written, then put a person back into it.",
   "author": {
-    "name": "Peter Yang",
-    "url": "https://creatoreconomy.so"
+    "name": "kayomarz97",
+    "url": "https://github.com/kayomarz97"
   },
-  "homepage": "https://creatoreconomy.so/p/use-my-no-ai-slop-skill-to-remove-20-ai-slop-patterns",
-  "repository": "https://github.com/petergyang/no-ai-slop",
+  "homepage": "https://github.com/kayomarz97/for-the-best-ex",
+  "repository": "https://github.com/kayomarz97/for-the-best-ex",
   "license": "MIT",
   "keywords": [
     "writing",
     "editing",
     "voice",
-    "AI slop"
+    "AI slop",
+    "first person"
   ],
   "skills": "./skills/",
   "interface": {
-    "displayName": "No AI Slop",
-    "shortDescription": "Cut AI slop. Keep your voice.",
-    "longDescription": "This plugin removes 20+ patterns of AI slop from any piece of writing without flattening your personal voice. It can also detect slop without guessing whether AI wrote the text.\n\nMore than 2,700 people have starred it on [GitHub](https://github.com/petergyang/no-ai-slop). The [launch post on X](https://x.com/petergyang/status/2079943830024188105) reached 611K impressions, 10K+ saves, and 13K+ link clicks.",
-    "developerName": "Peter Yang",
+    "displayName": "For The Best Ex",
+    "shortDescription": "Delete the tells. Put a person back in.",
+    "longDescription": "Most tools that clean up AI writing only subtract. They strip the banned words, the throat-clearing, the fake-profound ending, and hand back prose that is clean and still reads as machine-written. Clean is not the same as human.\n\nThis skill does the subtraction, then does the part nobody does: it adds the things machine prose never has. A first-person stance. An anecdote with an institution and a date in it. An admission that you might be wrong. Sentence lengths that swing from four words to forty instead of sitting at a tidy eighteen. Hedges like \"probably\" and \"I think\" that polished output strips out.\n\nForked from no-ai-slop by Peter Yang, and extended with a rule layer drawn from published work on how machine-text detection actually operates.",
+    "developerName": "kayomarz97",
     "category": "Productivity",
     "capabilities": [
       "Edit",
       "Detect",
-      "Preserve voice"
+      "Humanise"
     ],
-    "websiteURL": "https://creatoreconomy.so/p/use-my-no-ai-slop-skill-to-remove-20-ai-slop-patterns",
-    "privacyPolicyURL": "https://github.com/petergyang/no-ai-slop/blob/main/PRIVACY.md",
-    "termsOfServiceURL": "https://github.com/petergyang/no-ai-slop/blob/main/TERMS.md",
+    "websiteURL": "https://github.com/kayomarz97/for-the-best-ex",
+    "privacyPolicyURL": "https://github.com/kayomarz97/for-the-best-ex/blob/main/PRIVACY.md",
+    "termsOfServiceURL": "https://github.com/kayomarz97/for-the-best-ex/blob/main/TERMS.md",
     "defaultPrompt": [
-      "edit (your writing)",
-      "Is this slop? (a writing excerpt)"
+      "edit (your draft)",
+      "does this read as AI? (an excerpt)",
+      "humanise this (clean but flat text)"
     ],
-    "brandColor": "#D30800",
-    "composerIcon": "./assets/no-ai-slop.png",
-    "logo": "./assets/no-ai-slop.png"
+    "brandColor": "#E2574C",
+    "composerIcon": "./assets/for-the-best-ex.png",
+    "logo": "./assets/for-the-best-ex.png"
   }
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build and validate the distributable No AI Slop plugin archive."""
+"""Build and validate the distributable For The Best Ex plugin archive."""
 
 from __future__ import annotations
 
@@ -13,6 +13,17 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / ".codex-plugin" / "plugin.json"
 DIST = ROOT / "dist"
+SLUG = "for-the-best-ex"
+ICON = f"{SLUG}.png"
+
+# Files copied into skills/<SLUG>/ verbatim. SKILL.md cites the references by relative
+# path, so they have to travel with it or the citations dangle.
+SKILL_FILES = (
+    Path("SKILL.md"),
+    Path("eval.md"),
+    Path("references/how-detection-works.md"),
+    Path("references/what-does-not-work.md"),
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -45,30 +56,34 @@ def validate_source(manifest: dict) -> None:
     if len(prompts) > 3 or any(len(prompt) > 128 for prompt in prompts):
         raise SystemExit("Starter prompts must contain at most three entries of 128 characters or fewer")
 
-    for source in (ROOT / "SKILL.md", ROOT / "eval.md", ROOT / "assets" / "no-ai-slop.png"):
+    sources = [ROOT / relative for relative in SKILL_FILES]
+    sources.append(ROOT / "assets" / ICON)
+    for source in sources:
         if not source.is_file():
             raise SystemExit(f"Missing package source: {source.relative_to(ROOT)}")
 
 
 def build_plugin(manifest: dict) -> tuple[Path, Path]:
-    plugin_root = DIST / "no-ai-slop"
+    plugin_root = DIST / SLUG
     if plugin_root.exists():
         shutil.rmtree(plugin_root)
 
-    skill_root = plugin_root / "skills" / "no-ai-slop"
+    skill_root = plugin_root / "skills" / SLUG
     (plugin_root / ".codex-plugin").mkdir(parents=True)
     (plugin_root / "assets").mkdir(parents=True)
     skill_root.mkdir(parents=True)
 
     shutil.copy2(MANIFEST, plugin_root / ".codex-plugin" / "plugin.json")
-    shutil.copy2(ROOT / "SKILL.md", skill_root / "SKILL.md")
-    shutil.copy2(ROOT / "eval.md", skill_root / "eval.md")
-    shutil.copy2(ROOT / "assets" / "no-ai-slop.png", plugin_root / "assets" / "no-ai-slop.png")
+    for relative in SKILL_FILES:
+        destination = skill_root / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(ROOT / relative, destination)
+    shutil.copy2(ROOT / "assets" / ICON, plugin_root / "assets" / ICON)
     shutil.copy2(ROOT / "LICENSE", plugin_root / "LICENSE")
     shutil.copy2(ROOT / "PRIVACY.md", plugin_root / "PRIVACY.md")
     shutil.copy2(ROOT / "TERMS.md", plugin_root / "TERMS.md")
 
-    archive = DIST / f"no-ai-slop-plugin-{manifest['version']}.zip"
+    archive = DIST / f"{SLUG}-plugin-{manifest['version']}.zip"
     if archive.exists():
         archive.unlink()
     with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as output:
@@ -81,27 +96,24 @@ def build_plugin(manifest: dict) -> tuple[Path, Path]:
 def validate_build(plugin_root: Path, archive: Path) -> None:
     expected = {
         ".codex-plugin/plugin.json",
-        "assets/no-ai-slop.png",
-        "skills/no-ai-slop/SKILL.md",
-        "skills/no-ai-slop/eval.md",
+        f"assets/{ICON}",
         "LICENSE",
         "PRIVACY.md",
         "TERMS.md",
     }
+    expected.update(f"skills/{SLUG}/{relative.as_posix()}" for relative in SKILL_FILES)
     actual = {
-        str(path.relative_to(plugin_root))
+        path.relative_to(plugin_root).as_posix()
         for path in plugin_root.rglob("*")
         if path.is_file()
     }
     if expected != actual:
         raise SystemExit(f"Unexpected package files: expected {sorted(expected)}, found {sorted(actual)}")
 
-    packaged_skill = plugin_root / "skills" / "no-ai-slop" / "SKILL.md"
-    packaged_eval = plugin_root / "skills" / "no-ai-slop" / "eval.md"
-    if packaged_skill.read_bytes() != (ROOT / "SKILL.md").read_bytes():
-        raise SystemExit("Packaged SKILL.md does not match the canonical file")
-    if packaged_eval.read_bytes() != (ROOT / "eval.md").read_bytes():
-        raise SystemExit("Packaged eval.md does not match the canonical file")
+    for relative in SKILL_FILES:
+        packaged = plugin_root / "skills" / SLUG / relative
+        if packaged.read_bytes() != (ROOT / relative).read_bytes():
+            raise SystemExit(f"Packaged {relative.as_posix()} does not match the canonical file")
     if not zipfile.is_zipfile(archive):
         raise SystemExit("Plugin archive is not a valid ZIP file")
 
